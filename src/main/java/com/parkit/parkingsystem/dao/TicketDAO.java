@@ -86,4 +86,24 @@ public class TicketDAO {
         }
         return false;
     }
+
+    public boolean getNbTicket(String vehicleRegNumber) {
+        Connection con = null;
+        boolean discount = false;
+        try {
+            con = dataBaseConfig.getConnection();
+            PreparedStatement ps = con.prepareStatement(DBConstants.GET_TICKET);
+            //ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
+            ps.setString(1, vehicleRegNumber);
+            ResultSet rs = ps.executeQuery();
+            discount = rs.next();
+            dataBaseConfig.closeResultSet(rs);
+            dataBaseConfig.closePreparedStatement(ps);
+        } catch (Exception ex) {
+            logger.error("Error saving ticket info", ex);
+        } finally {
+            dataBaseConfig.closeConnection(con);
+            return discount;
+        }
+    }
 }
