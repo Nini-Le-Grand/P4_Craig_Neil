@@ -3,8 +3,8 @@ package com.parkit.parkingsystem.model;
 import com.parkit.parkingsystem.constants.ParkingType;
 
 public class ParkingSpot {
-    private int number;
-    private ParkingType parkingType;
+    private final int number;
+    private final ParkingType parkingType;
     private boolean isAvailable;
 
     public ParkingSpot(int number, ParkingType parkingType, boolean isAvailable) {
@@ -17,17 +17,17 @@ public class ParkingSpot {
         return number;
     }
 
-    public void setId(int number) {
+    /*public void setId(int number) {
         this.number = number;
-    }
+    }*/
 
     public ParkingType getParkingType() {
         return parkingType;
     }
 
-    public void setParkingType(ParkingType parkingType) {
+    /*public void setParkingType(ParkingType parkingType) {
         this.parkingType = parkingType;
-    }
+    }*/
 
     public boolean isAvailable() {
         return isAvailable;

@@ -2,8 +2,6 @@ package com.parkit.parkingsystem.service;
 
 import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.Ticket;
-
-import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 
 public class FareCalculatorService {
@@ -15,6 +13,7 @@ public class FareCalculatorService {
         long outTime = ticket.getOutTime().getTime();
         long duration = outTime - inTime;
         long durationInMinutes = TimeUnit.MILLISECONDS.toMinutes(duration);
+
         double price;
 
         if(durationInMinutes < 30) {
@@ -29,7 +28,7 @@ public class FareCalculatorService {
                     price = durationInMinutes * Fare.BIKE_RATE_PER_HOUR / 60;
                     break;
                 }
-                default: throw new IllegalArgumentException("Unkown Parking Type");
+                default: throw new IllegalArgumentException("Unknown Parking Type");
             }
             if (discount) {
                 price = price * 0.95;
@@ -37,7 +36,6 @@ public class FareCalculatorService {
         }
         ticket.setPrice(price);
     }
-
     public void calculateFare(Ticket ticket) {
         calculateFare(ticket, false);
     }

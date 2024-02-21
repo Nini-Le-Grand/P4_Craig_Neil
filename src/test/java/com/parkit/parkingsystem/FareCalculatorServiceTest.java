@@ -1,7 +1,7 @@
 package com.parkit.parkingsystem;
 
-import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.constants.ParkingType;
+import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.ParkingSpot;
 import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.FareCalculatorService;
@@ -19,12 +19,12 @@ public class FareCalculatorServiceTest {
     private Ticket ticket;
 
     @BeforeAll
-    private static void setUp() {
+    public static void setUp() {
         fareCalculatorService = new FareCalculatorService();
     }
 
     @BeforeEach
-    private void setUpPerTest() {
+    public void setUpPerTest() {
         ticket = new Ticket();
     }
 
@@ -57,17 +57,26 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
-    public void calculateFareUnkownType(){
+    public void calculateFareUnknownType(){
         Date inTime = new Date();
         inTime.setTime( System.currentTimeMillis() - (  60 * 60 * 1000) );
         Date outTime = new Date();
+
         ParkingSpot parkingSpot = new ParkingSpot(1, null,false);
 
         ticket.setInTime(inTime);
         ticket.setOutTime(outTime);
         ticket.setParkingSpot(parkingSpot);
         assertThrows(NullPointerException.class, () -> fareCalculatorService.calculateFare(ticket));
+
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> {
+            fareCalculatorService.calculateFare(ticket, false);
+        });
+
+        //assertEquals("Unknown Parking Type", exception.getMessage());
     }
+
+
 
     @Test
     public void calculateFareBikeWithFutureInTime(){
@@ -79,7 +88,13 @@ public class FareCalculatorServiceTest {
         ticket.setInTime(inTime);
         ticket.setOutTime(outTime);
         ticket.setParkingSpot(parkingSpot);
-        assertThrows(IllegalArgumentException.class, () -> fareCalculatorService.calculateFare(ticket));
+        //assertThrows(IllegalArgumentException.class, () -> fareCalculatorService.calculateFare(ticket), "Out time provided is incorrect:"+outTime);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            fareCalculatorService.calculateFare(ticket, false);
+        });
+
+        assertEquals("Out time provided is incorrect:"+outTime, exception.getMessage());
     }
 
     @Test
