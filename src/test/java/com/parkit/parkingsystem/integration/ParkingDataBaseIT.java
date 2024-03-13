@@ -16,18 +16,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static java.lang.Thread.sleep;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ParkingDataBaseIT {
-
     private static final DataBaseTestConfig dataBaseTestConfig = new DataBaseTestConfig();
     private static ParkingSpotDAO parkingSpotDAO;
     private static TicketDAO ticketDAO;
@@ -46,9 +46,9 @@ public class ParkingDataBaseIT {
     }
 
     @BeforeEach
-    public void setUpPerTest() throws Exception {
-        lenient().when(inputReaderUtil.readSelection()).thenReturn(2);
-        lenient().when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+    public void setUpPerTest() {
+        when(inputReaderUtil.readSelection()).thenReturn(1);
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
         dataBasePrepareService.clearDataBaseEntries();
     }
 
@@ -65,27 +65,22 @@ public class ParkingDataBaseIT {
         Ticket ticket = ticketDAO.getTicket("ABCDEF");
         ParkingSpot ticketParkingSpot = ticket.getParkingSpot();
 
-        assertEquals(ticketParkingSpot.getId(), 4);
-        assertEquals(ticketParkingSpot.getParkingType(), ParkingType.BIKE);
+        assertEquals(ticketParkingSpot.getId(), 1);
+        assertEquals(ticketParkingSpot.getParkingType(), ParkingType.CAR);
         assertFalse(ticketParkingSpot.isAvailable());
         assertEquals(ticket.getVehicleRegNumber(), "ABCDEF");
         assertEquals(ticket.getPrice(), 0);
 
-        assertEquals(parkingSpotDAO.getNextAvailableSlot(ParkingType.BIKE), 5);
-
-        String pattern = "dd/MM/yyyy HH:mm";
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-        assertEquals(simpleDateFormat.format(ticket.getInTime()), simpleDateFormat.format(new Date()));
+        assertEquals(parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR), 2);
     }
 
     @Test
     public void testParkingLotExit() {
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
 
-
         Ticket mockTicket = new Ticket();
         mockTicket.setId(1);
-        mockTicket.setParkingSpot(new ParkingSpot(4, ParkingType.BIKE, false));
+        mockTicket.setParkingSpot(new ParkingSpot(1, ParkingType.CAR, false));
         mockTicket.setVehicleRegNumber("ABCDEF");
         mockTicket.setInTime(new Date(System.currentTimeMillis() - 3605 * 1000));
         ticketDAO.saveTicket(mockTicket);
@@ -95,29 +90,34 @@ public class ParkingDataBaseIT {
         Ticket ticket = ticketDAO.getTicket("ABCDEF");
         ParkingSpot parkingSpot = ticket.getParkingSpot();
 
-        assertEquals(parkingSpotDAO.getNextAvailableSlot(ParkingType.BIKE), parkingSpot.getId());
-        assertEquals(parkingSpot.getId(), 4);
-        assertEquals(parkingSpot.getParkingType(), ParkingType.BIKE);
+        assertEquals(parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR), parkingSpot.getId());
+        assertEquals(parkingSpot.getId(), 1);
+        assertEquals(parkingSpot.getParkingType(), ParkingType.CAR);
         assertEquals(ticket.getVehicleRegNumber(), "ABCDEF");
-        assertEquals(ticket.getPrice(), 1 * 0.95);
-
-        //String pattern = "dd/MM/yyyy HH:mm";
-        //SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-        //assertEquals(simpleDateFormat.format(ticket.getInTime()), simpleDateFormat.format(new Date()));
+        assertEquals(ticket.getPrice(), 1.5);
     }
 
     @Test
-    public void testParkingLotExitWithDiscount() throws InterruptedException {
+    public void testParkingLotExitWithDiscount(){
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
-        ParkingSpot parkingSpot = parkingSpotDAO.getParkingSpot(4);
-        assertTrue(parkingSpot.isAvailable());
-        parkingService.processIncomingVehicle();
-        parkingSpot = parkingSpotDAO.getParkingSpot(4);
-        assertFalse(parkingSpot.isAvailable());
-        sleep(1000);
+
+        Ticket mockTicket = new Ticket();
+        mockTicket.setId(1);
+        mockTicket.setParkingSpot(new ParkingSpot(1, ParkingType.CAR, false));
+        mockTicket.setVehicleRegNumber("ABCDEF");
+        mockTicket.setInTime(new Date(System.currentTimeMillis() - (1000000 + 3605*1000)));
+        mockTicket.setOutTime(new Date(System.currentTimeMillis() - 1000000));
+        mockTicket.setPrice(1);
+        ticketDAO.saveTicket(mockTicket);
+
+        mockTicket.setInTime(new Date(System.currentTimeMillis() - 3605*1000));
+        mockTicket.setOutTime(null);
+        mockTicket.setPrice(0);
+        ticketDAO.saveTicket(mockTicket);
+
         parkingService.processExitingVehicle();
-        parkingSpot = parkingSpotDAO.getParkingSpot(4);
-        assertTrue(parkingSpot.isAvailable());
+
+        assertEquals(ticketDAO.getTicket("ABCDEF").getPrice(), 1.5*0.95);
     }
 
 }

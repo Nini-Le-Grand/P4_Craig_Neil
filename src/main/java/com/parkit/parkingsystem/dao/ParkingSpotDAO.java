@@ -13,27 +13,7 @@ import java.sql.ResultSet;
 
 public class ParkingSpotDAO {
     private static final Logger logger = LogManager.getLogger("ParkingSpotDAO");
-
     public DataBaseConfig dataBaseConfig = new DataBaseConfig();
-
-    public ParkingSpot getParkingSpot(Integer parkingNumber){
-        Connection con = null;
-        ParkingSpot parkingSpot = null;
-        try {
-            con = dataBaseConfig.getConnection();
-            PreparedStatement ps = con.prepareStatement(DBConstants.GET_PARKING_SPOT);
-            ps.setInt(1, parkingNumber);
-            ResultSet rs = ps.executeQuery();
-            if(rs.next()){
-                parkingSpot = new ParkingSpot(rs.getInt(1), ParkingType.valueOf(rs.getString(3)), rs.getBoolean(2));
-            }
-        } catch (Exception ex){
-            logger.error("Cannot find parking spot", ex);
-        } finally {
-            dataBaseConfig.closeConnection(con);
-        }
-        return parkingSpot;
-    }
 
     public int getNextAvailableSlot(ParkingType parkingType){
         Connection con = null;
@@ -48,8 +28,8 @@ public class ParkingSpotDAO {
             }
             dataBaseConfig.closeResultSet(rs);
             dataBaseConfig.closePreparedStatement(ps);
-        }catch (Exception ex){
-            logger.error("Error fetching next available slot",ex);
+        }catch (Exception e){
+            logger.error("Error fetching next available slot",e);
         }finally {
             dataBaseConfig.closeConnection(con);
         }
@@ -57,7 +37,7 @@ public class ParkingSpotDAO {
     }
 
     public boolean updateParking(ParkingSpot parkingSpot){
-        //update the availability fo that parking slot
+        //update the availability for that parking slot
         Connection con = null;
         try {
             con = dataBaseConfig.getConnection();
